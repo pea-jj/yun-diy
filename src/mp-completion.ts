@@ -20,9 +20,16 @@ export default class MpSdkCompletion {
   }
 
   public run() {
-    axios.get('https://doc.youzanyun.com/api/doc/cms/item?catId=35702&libId=11').then(res => {
-      console.log(res, this.sdkMock);
-      
+    const url = 'https://doc.youzanyun.com/api/mp/sdk';
+    // const url = 'http://127.0.0.1:8201/api/mp/sdk';
+    axios.get(url).then(res => {
+      if (res.status === 200 && res.data && res.data.data) {
+        const sdkMock = res.data.data;
+        this.sdkMock = sdkMock;
+      }
+    }).catch(e => {
+      console.error(e);
+    }).finally(() => {
       const provider = vscode.languages.registerCompletionItemProvider('javascript', { provideCompletionItems: this.provideCompletionItems.bind(this) }, '.');
       this.context.subscriptions.push(provider);
     });
@@ -64,7 +71,6 @@ export default class MpSdkCompletion {
       // @ts-ignore：
       mockData.page = sdkMock.page[pageKey];
     }
-    console.log(6666666, arr)
     let result: any[] = [];
     this.makeCompletionItem(mockData, arr, result);
     return result;
@@ -80,6 +86,9 @@ export default class MpSdkCompletion {
         // completionItem.detail = 'youzan';
         // completionItem.documentation = 'you-zan';
         if (items[v]._type === 'snippet') {
+          completionItem.kind = vscode.CompletionItemKind.Snippet;
+          completionItem.detail = 'view';
+          completionItem.documentation = items[v].snippet;
           completionItem.insertText = new vscode.SnippetString(items[v].snippet);
         }
         result.push(completionItem);
